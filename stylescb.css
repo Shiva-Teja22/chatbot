@@ -51,6 +51,7 @@ body {
 }
 
 .chat-body {
+    width: 350px;
     height: 500px;
     padding: 15px;
     max-height: 400px;
