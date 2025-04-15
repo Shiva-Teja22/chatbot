@@ -4,6 +4,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const chatBody = document.querySelector(".chat-body");
     const closeBtn = document.querySelector(".close-btn");
 
+    const API_URL = "https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=YOUR_GEMINI_API_KEY";
+
     chatForm.addEventListener("submit", (event) => {
         event.preventDefault();
         const userMessage = messageInput.value.trim();
@@ -13,6 +15,32 @@ document.addEventListener("DOMContentLoaded", () => {
             setTimeout(() => botReply(userMessage), 1000);
         }
     });
+
+    async function getAIResponse(userMessage) {
+        const requestOptions = {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                contents: [{
+                    parts: [{ text: userMessage }]
+                }]
+            })
+        };
+
+        try {
+            const response = await fetch(API_URL, requestOptions);
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error?.message || "API request failed");
+            }
+
+            return data.candidates?.[0]?.content?.parts?.[0]?.text || "I'm not sure how to respond to that.";
+        } catch (error) {
+            console.error("Error fetching AI response:", error);
+            return "Oops! Something went wrong.";
+        }
+    }
 
     function appendMessage(text, className) {
         const messageDiv = document.createElement("div");
@@ -30,85 +58,63 @@ document.addEventListener("DOMContentLoaded", () => {
         messageDiv.appendChild(messageText);
         chatBody.appendChild(messageDiv);
         
-        // Auto-scroll to the latest message
         chatBody.scrollTop = chatBody.scrollHeight;
     }
 
-    function botReply(userMessage) {
-        // Typing Indicator
+    async function botReply(userMessage) {
         const typingIndicator = document.createElement("div");
         typingIndicator.classList.add("message", "bot-message");
         typingIndicator.innerHTML = `<span class="material-icons">smart_toy</span> <span>Typing...</span>`;
         chatBody.appendChild(typingIndicator);
         chatBody.scrollTop = chatBody.scrollHeight;
 
-        // Bot response logic
         const botResponses = {
-            "hello": "Hi there! How can I assist you my nigga?",
-            "help": "Sure! What do you need help with?  \n\n - Select from the options below -\n 1) Delivery issue\n 2) Payment issue\n 3) Other",
-            "bye": "Goodbye! Have a great day!, my G",
-            "hey!" : "Hey!!, whatsupp , nigga",
+            "hello": "Hi there! How can I assist you today?",
+            "help": "Sure! What do you need help with?\n\n1) Delivery issue\n2) Payment issue\n3) Other",
+            "bye": "Goodbye! Have a great day!",
             "who are you": "I'm an AI chatbot here to assist you.",
             "what can you do": "I can chat with you, answer questions, and even talk!",
             "tell me a joke": "Why don’t skeletons fight each other? Because they don’t have the guts!",
-            "1": "Please enter your Delivery ID.",
-            "2": "Please enter your Transaction ID.",
-            "3": "Would you like to call our Customer Support Agent? Type 'yes' or 'no'.",
-            "yes": "You can reach us at: XXXX-XXX-XXXX",
-            "no": "Alright! Let me know if you need anything else.",
             "hi": "Hi there! Looking for something specific?",
             "what products do you sell": "We offer electronics, clothing, and accessories. What are you looking for?",
             "do you have discounts": "Yes! We have ongoing discounts. Are you interested in electronics, clothing, or accessories?",
-            "current offers": "We have special offers this week! Would you like to hear about discounts on specific items?",
             "how much is shipping": "Shipping costs depend on your location. Could you provide your country or region?",
             "do you offer free shipping": "Yes, free shipping is available on orders above $100!",
             "what is the delivery time": "Our delivery time is typically 3-7 business days, depending on your location.",
-            "how can I place an order": "You can order through our website. Would you like guidance?",
             "how do I track my order": "Use the tracking ID sent to your email. Need help finding it?",
             "do you have bulk discounts": "Yes! We offer special discounts for bulk orders. How many items are you looking for?",
             "do you provide wholesale prices": "Yes, we do. Would you like to talk to a sales agent?",
-            "payment options": "We accept credit/debit cards, PayPal, and bank transfers. Need help with payment?",
-            "do you offer cash on delivery": "Yes, cash on delivery is available in select locations.",
             "return policy": "We have a 30-day return policy. Would you like to know how to return an item?",
             "refund process": "Refunds are processed within 5-7 business days. Need assistance?",
             "customer support": "Our support team is available 24/7. Would you like to chat with an agent?",
-            "can I speak to an agent": "Sure! Let me connect you with our sales team.",
+            "can I speak to an agent": "Sure! Let me connect you with our support team.",
             "where are you located": "Our headquarters are in [Your Location], but we ship worldwide!",
             "do you have a physical store": "Yes, we have multiple store locations. Which city are you in?",
             "thank you": "You're welcome! Let me know if you need anything else.",
-            "bye": "Goodbye! Have a great shopping experience!",
-            "hey": "Hey! How can I help you today?",
-            "what products do you sell": "We offer a variety of products including electronics, clothing, and accessories. What are you looking for?",
-            "do you have discounts": "Yes! We have ongoing discounts. Could you tell me which product or category you’re interested in?",
-            "current offers": "We have special offers on selected items! Would you like to know about discounts on electronics, clothing, or accessories?",
-            "how much is shipping": "Shipping costs depend on your location. Could you provide your country or region?",
-            "do you offer free shipping": "Yes! We offer free shipping on orders above $100. Let me know if you need more details.",
-            "what is the delivery time": "Our standard delivery time is 3-7 business days, depending on your location.",
-            "how can I place an order": "You can place an order through our website. Would you like me to guide you through the process?",
-            "how do I track my order": "You can track your order using the tracking ID sent to your email. Need help finding it?",
-            "do you have bulk purchase discounts": "Yes! We offer special discounts for bulk purchases. How many items are you looking to buy?",
-            "do you provide wholesale prices": "Yes, we offer wholesale pricing for large orders. Would you like to speak with a sales representative?",
-            "payment options": "We accept credit/debit cards, PayPal, and bank transfers. Would you like help with payment?",
-            "do you offer cash on delivery": "Yes, cash on delivery is available in select locations. Where would you like the order delivered?",
-            "return policy": "We offer a 30-day return policy. Would you like details on how to return an item?",
-            "refund process": "Refunds are processed within 5-7 business days. Need help initiating a return?",
-            "customer support": "Our customer support is available 24/7. Would you like to chat with an agent?",
-            "can I speak to an agent": "Sure! Let me connect you with a customer support agent.",
-            "where are you located": "Our headquarters are in [Your Location], but we ship worldwide!",
-            "do you have a physical store": "Yes, we have stores in multiple locations. Which city are you in?",
-            "thank you": "You're welcome! Let me know if you need anything else.",
-            "thanks" : "Happy to help!",
-             
         };
 
-        setTimeout(() => {
-            // Remove typing indicator
+        setTimeout(async () => {
             chatBody.removeChild(typingIndicator);
+            let reply;
 
-            const reply = botResponses[userMessage.toLowerCase()] || "I'm not sure how to respond to that.";
+            // **Math Calculation Handling**
+            if (/^\d+[\+\-\*/]\d+$/.test(userMessage)) {
+                try {
+                    reply = eval(userMessage);
+                } catch {
+                    reply = "I couldn't calculate that. Please enter a valid mathematical expression.";
+                }
+            } 
+            // **Check for Predefined Responses**
+            else if (botResponses[userMessage.toLowerCase()]) {
+                reply = botResponses[userMessage.toLowerCase()];
+            } 
+            // **Fallback to AI Response**
+            else {
+                reply = await getAIResponse(userMessage);
+            }
+
             appendMessage(reply, "bot-message");
-
-            // Speech Output
             speak(reply);
         }, 1500);
     }
@@ -121,6 +127,69 @@ document.addEventListener("DOMContentLoaded", () => {
         speech.rate = 1;
         speech.pitch = 1;
         window.speechSynthesis.speak(speech);
+    }
+
+    closeBtn.addEventListener("click", () => {
+        document.querySelector(".chatbot-container").style.display = "none";
+    });
+});
+
+document.addEventListener("DOMContentLoaded", () => {
+    const chatForm = document.querySelector(".chat-form");
+    const messageInput = document.querySelector(".message-input");
+    const chatBody = document.querySelector(".chat-body");
+    const closeBtn = document.querySelector(".close-btn");
+
+    let helpEnabled = false;
+
+    chatForm.addEventListener("submit", (event) => {
+        event.preventDefault();
+        const userMessage = messageInput.value.trim().toLowerCase();
+        if (userMessage) {
+            appendMessage(userMessage, "user-message");
+            messageInput.value = "";
+            setTimeout(() => botReply(userMessage), 1000);
+        }
+    });
+
+    function appendMessage(text, className) {
+        const messageDiv = document.createElement("div");
+        messageDiv.classList.add("message", className);
+        const messageText = document.createElement("span");
+        messageText.textContent = text;
+        messageDiv.appendChild(messageText);
+        chatBody.appendChild(messageDiv);
+        chatBody.scrollTop = chatBody.scrollHeight;
+    }
+
+    function botReply(userMessage) {
+        let reply = "I didn't understand that. Try typing 'help'.";
+
+        switch (true) {
+            case userMessage === "help":
+                helpEnabled = true;
+                reply = "Sure! What do you need help with?\n1) Delivery issue\n2) Payment issue\n3) Other";
+                break;
+            case helpEnabled && userMessage === "1":
+                reply = "Please enter your Delivery ID.";
+                break;
+            case helpEnabled && userMessage === "2":
+                reply = "Please enter your Transaction ID.";
+                break;
+            case helpEnabled && userMessage === "3":
+                reply = "Would you like to call our Customer Support Agent? Type 'yes' or 'no'.";
+                break;
+            case userMessage === "yes":
+                reply = "You can reach us at: XXXX-XXX-XXXX";
+                break;
+            case userMessage === "no":
+                reply = "Alright! Let me know if you need anything else.";
+                break;
+            default:
+                reply = "I'm not sure how to respond to that. Try 'help' for assistance.";
+        }
+
+        appendMessage(reply, "bot-message");
     }
 
     closeBtn.addEventListener("click", () => {
